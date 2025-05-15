@@ -1,6 +1,19 @@
-// Set dimensions 
-const width = 5000;  //
+// Set dimensions
+const width = 5000;
 const height = 350000;
+
+// Define consistent color mapping
+const colorMap = {
+  "Not Exposed": "lightgrey",
+  "Minimal Exposure": "lightgreen",
+  "Exposed: Gradient 2": "lightblue",
+  "Exposed: Gradient 3": "orange",
+  "Exposed: Gradient 4": "red",
+  "Very Low": "lightgrey",
+  "Low": "lightgreen",
+  "Medium": "orange",
+  "High": "red"
+};
 
 // Append the SVG object to the body
 const svg = d3.select("#tree-container")
@@ -10,9 +23,8 @@ const svg = d3.select("#tree-container")
   .append("g")
   .attr("transform", "translate(50,0)");
 
-
 // Create the tree layout
-const tree = d3.tree().size([height, width - 3000]);  // Reduce width for tree layout to leave more space for labels
+const tree = d3.tree().size([height, width - 3000]);
 
 // Load JSON data
 d3.json("output_data.json").then(data => {
@@ -21,7 +33,7 @@ d3.json("output_data.json").then(data => {
   // Assign the tree layout to the data
   tree(root);
 
-  // Links
+  // Draw links
   svg.selectAll("path")
     .data(root.links())
     .enter()
@@ -34,7 +46,7 @@ d3.json("output_data.json").then(data => {
       .x(d => d.y)
       .y(d => d.x));
 
-  // Nodes
+  // Draw nodes
   const node = svg.selectAll("g.node")
     .data(root.descendants())
     .enter()
@@ -42,35 +54,16 @@ d3.json("output_data.json").then(data => {
     .attr("transform", d => `translate(${d.y},${d.x})`);
 
   node.append("circle")
-  .attr("r", 5)
-  .attr("fill", d => {
-    if (d.data.risk === "high") return "red";
-    else if (d.data.risk === "medium") return "orange";
-    else return "green";
-  });
-  
-  // Adjust label positioning with more space
+    .attr("r", 5)
+    .attr("fill", d => colorMap[d.data.risk] || "black"); // Default color
+
+  // Add labels
   node.append("text")
     .attr("dy", 3)
-    .attr("x", d => d.children ? -10 : 40)  // Further increase spacing for right-side labels
+    .attr("x", d => d.children ? -10 : 40)
     .style("text-anchor", d => d.children ? "end" : "start")
     .style("font-size", "11px")
     .text(d => d.data.name);
 }).catch(error => {
   console.error("Error loading the data:", error);
-});
-
-// Add colored circles for each risk level
-legendData.forEach((d, i) => {
-  legend.append("circle")
-    .attr("cx", 0)
-    .attr("cy", 30 + i * 20)
-    .attr("r", 5)
-    .attr("fill", d.color);
-
-  legend.append("text")
-    .attr("x", 15)
-    .attr("y", 30 + i * 20)
-    .attr("dy", "0.35em")
-    .text(d.label);
 });
